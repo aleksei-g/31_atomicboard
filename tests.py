@@ -13,6 +13,7 @@ CREATE_USER_URL = 'http://atomicboard.devman.org/create_test_user/'
 class AtomicboardTest(unittest.TestCase):
 
     def setUp(self):
+        # self.driver = webdriver.Firefox()
         self.driver = webdriver.PhantomJS()
         self.wait = WebDriverWait(self.driver, 30)
         self.driver.get(CREATE_USER_URL)
@@ -75,6 +76,22 @@ class AtomicboardTest(unittest.TestCase):
         sleep(1)
         assert 'test create new task' in self.driver.page_source
 
+    def test_drag_and_drop_task(self):
+        tickets_column_source = self.driver.find_element_by_xpath(
+            '//span[contains(@class, "tickets-column")][1]')
+        tickets_column_target = self.driver.find_element_by_xpath(
+            '//span[contains(@class, "tickets-column")][2]')
+        task = tickets_column_source.find_element_by_xpath(
+            '//div[contains(@class, "ticket__compact")]')
+        task_id = task.find_element_by_xpath(
+            '//span[contains(@class, "ticket_id")]').text
+        action_chains = ActionChains(self.driver)
+        action_chains.drag_and_drop(task, tickets_column_target).perform()
+        action_chains.click_and_hold(task).move_to_element(
+            tickets_column_target).release(task).perform()
+        sleep(5)
+        assert task_id not in tickets_column_source.text
+        assert task_id in tickets_column_target.text
 
     def tearDown(self):
         self.driver.quit()
