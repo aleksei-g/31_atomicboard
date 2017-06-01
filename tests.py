@@ -1,19 +1,18 @@
 import unittest
 from time import sleep
 from selenium import webdriver
-from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 SITE_URL = 'http://atomicboard.devman.org/'
 CREATE_USER_URL = 'http://atomicboard.devman.org/create_test_user/'
+JQUERY_URL = "http://code.jquery.com/jquery-1.11.2.min.js"
 
 
 class AtomicboardTest(unittest.TestCase):
 
     def setUp(self):
-        # self.driver = webdriver.Firefox()
         self.driver = webdriver.PhantomJS()
         self.wait = WebDriverWait(self.driver, 30)
         self.driver.get(CREATE_USER_URL)
@@ -85,11 +84,16 @@ class AtomicboardTest(unittest.TestCase):
             '//div[contains(@class, "ticket__compact")]')
         task_id = task.find_element_by_xpath(
             '//span[contains(@class, "ticket_id")]').text
-        action_chains = ActionChains(self.driver)
-        action_chains.drag_and_drop(task, tickets_column_target).perform()
-        action_chains.click_and_hold(task).move_to_element(
-            tickets_column_target).release(task).perform()
-        sleep(5)
+        with open("jquery_load_helper.js") as jquery_load_helper_file:
+            load_jquery_js = jquery_load_helper_file.read()
+        with open("drag_and_drop_helper.js") as drag_and_drop_helper_file:
+            drag_and_drop_js = drag_and_drop_helper_file.read()
+        self.driver.execute_async_script(load_jquery_js, JQUERY_URL)
+        self.driver.execute_script(
+            drag_and_drop_js
+            + "$('div.ticket__compact:eq(0)').simulateDragDrop("
+              "{ dropTarget: 'span.tickets-column:eq(1)'});")
+        sleep(1)
         assert task_id not in tickets_column_source.text
         assert task_id in tickets_column_target.text
 
