@@ -1,3 +1,4 @@
+/** source: https://stackoverflow.com/questions/29381233/how-to-simulate-html5-drag-and-drop-in-selenium-webdriver **/
 /** dynamically load jQuery */
 (function(jqueryUrl, callback) {
     if (typeof jqueryUrl != 'string') {
